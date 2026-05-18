@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Citation Processing - QuickCite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .format-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .format-btn {
+            flex: 1;
+            padding: 10px 20px;
+            background-color: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .format-btn:hover {
+            background-color: #d5dbdb;
+        }
+
+        .format-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .citation-entry {
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .entry-number {
+            font-weight: 600;
+            color: #3498db;
+            font-size: 16px;
+        }
+
+        .remove-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .remove-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            margin-bottom: 5px;
+            color: #34495e;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .add-btn, .generate-btn, .export-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .add-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .add-btn:hover {
+            background-color: #229954;
+        }
+
+        .generate-btn {
+            background-color: #3498db;
+            color: white;
+            flex: 1;
+        }
+
+        .generate-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .export-btn {
+            background-color: #9b59b6;
+            color: white;
+        }
+
+        .export-btn:hover {
+            background-color: #8e44ad;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .citation-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .citation-table th {
+            background-color: #34495e;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .citation-table th:hover {
+            background-color: #2c3e50;
+        }
+
+        .citation-table th::after {
+            content: ' ⇅';
+            opacity: 0.5;
+        }
+
+        .citation-table td {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .citation-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .citation-text {
+            font-family: Georgia, serif;
+            line-height: 1.6;
+        }
+
+        .source-type-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-census { background-color: #3498db; color: white; }
+        .badge-birth { background-color: #2ecc71; color: white; }
+        .badge-death { background-color: #e74c3c; color: white; }
+        .badge-marriage { background-color: #e91e63; color: white; }
+        .badge-obituary { background-color: #95a5a6; color: white; }
+        .badge-newspaper { background-color: #f39c12; color: white; }
+        .badge-book { background-color: #9b59b6; color: white; }
+        .badge-archive { background-color: #16a085; color: white; }
+        .badge-church { background-color: #d35400; color: white; }
+        .badge-cemetery { background-color: #7f8c8d; color: white; }
+        .badge-land { background-color: #27ae60; color: white; }
+        .badge-probate { background-color: #8e44ad; color: white; }
+        .badge-military { background-color: #c0392b; color: white; }
+
+        .chart-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .chart-bar-container {
+            margin-bottom: 15px;
+        }
+
+        .chart-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .chart-bar-bg {
+            height: 30px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chart-bar-fill {
+            height: 100%;
+            transition: width 0.6s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .citation-table {
+                font-size: 12px;
+            }
+
+            .citation-table th,
+            .citation-table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Batch Citation Processing</h1>
+            <p class="tagline">Process multiple citations at once - QuickCite</p>
+        </header>
+
+        <div class="form-section">
+            <div class="section-title">Citation Format</div>
+            <div class="format-toggle">
+                <button type="button" class="format-btn active" data-format="chicago">Chicago</button>
+                <button type="button" class="format-btn" data-format="mla">MLA</button>
+                <button type="button" class="format-btn" data-format="apa">APA</button>
+            </div>
+
+            <div class="section-title">Add Citations</div>
+            <div id="citationEntries"></div>
+
+            <div class="action-buttons">
+                <button type="button" class="add-btn" id="addEntryBtn">+ Add Citation</button>
+                <button type="button" class="generate-btn" id="generateAllBtn">Generate All Citations</button>
+            </div>
+        </div>
+
+        <div id="resultsSection" class="results-section">
+            <div class="form-section">
+                <div class="results-header">
+                    <div class="section-title">Generated Citations</div>
+                    <button type="button" class="export-btn" id="exportBtn">Copy All to Clipboard</button>
+                </div>
+                <table class="citation-table" id="citationTable">
+                    <thead>
+                        <tr>
+                            <th data-sort="type">Type</th>
+                            <th data-sort="title">Title</th>
+                            <th data-sort="citation">Citation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="citationTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="chart-section">
+                <div class="chart-title">Citation Types Breakdown</div>
+                <div id="chartContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFormat = 'chicago';
+        let entryCounter = 0;
+        let citations = [];
+
+        const sourceTypeLabels = {
+            census: 'Census Record',
+            birth: 'Birth Certificate',
+            death: 'Death Certificate',
+            marriage: 'Marriage Record',
+            obituary: 'Obituary',
+            newspaper: 'Newspaper Article',
+            book: 'Book',
+            archive: 'Archive Document',
+            church: 'Church Record',
+            cemetery: 'Cemetery Record',
+            land: 'Land Record',
+            probate: 'Probate Record',
+            military: 'Military Record'
+        };
+
+        document.querySelectorAll('.format-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFormat = this.dataset.format;
+            });
+        });
+
+        function addCitationEntry() {
+            entryCounter++;
+            const entryHTML = `
+                <div class="citation-entry" data-entry="${entryCounter}">
+                    <div class="entry-header">
+                        <span class="entry-number">Citation #${entryCounter}</span>
+                        <button type="button" class="remove-btn" onclick="removeEntry(${entryCounter})">Remove</button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Source Type *</label>
+                            <select class="source-type" required>
+                                <option value="">Select...</option>
+                                <option value="census">Census Record</option>
+                                <option value="birth">Birth Certificate</option>
+                                <option value="death">Death Certificate</option>
+                                <option value="marriage">Marriage Record</option>
+                                <option value="obituary">Obituary</option>
+                                <option value="newspaper">Newspaper Article</option>
+                                <option value="book">Book</option>
+                                <option value="archive">Archive Document</option>
+                                <option value="church">Church Record</option>
+                                <option value="cemetery">Cemetery Record</option>
+                                <option value="land">Land Record</option>
+                                <option value="probate">Probate Record</option>
+                                <option value="military">Military Record</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Author/Creator</label>
+                            <input type="text" class="author" placeholder="e.g., U.S. Census Bureau">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Title/Description *</label>
+                            <input type="text" class="title" required placeholder="e.g., 1920 U.S. Federal Census">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Subject Name</label>
+                            <input type="text" class="name" placeholder="e.g., Mary Elizabeth Johnson">
+                        </div>
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="text" class="date" placeholder="e.g., 15 January 1920">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Location</label>
+                            <input type="text" class="location" placeholder="e.g., Boston, Suffolk County, MA">
+                        </div>
+                        <div class="form-group">
+                            <label>Repository</label>
+                            <input type="text" class="repository" placeholder="e.g., National Archives">
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('citationEntries').insertAdjacentHTML('beforeend', entryHTML);
+        }
+
+        function removeEntry(id) {
+            const entry = document.querySelector(`[data-entry="${id}"]`);
+            if (entry) {
+                entry.remove();
+            }
+        }
+
+        document.getElementById('addEntryBtn').addEventListener('click', addCitationEntry);
+
+        document.getElementById('generateAllBtn').addEventListener('click', function() {
+            citations = [];
+            const entries = document.querySelectorAll('.citation-entry');
+
+            entries.forEach(entry => {
+                const sourceType = entry.querySelector('.source-type').value;
+                const title = entry.querySelector('.title').value;
+
+                if (sourceType && title) {
+                    const data = {
+                        sourceType: sourceType,
+                        author: entry.querySelector('.author').value,
+                        title: title,
+                        name: entry.querySelector('.name').value,
+                        date: entry.querySelector('.date').value,
+                        location: entry.querySelector('.location').value,
+                        repository: entry.querySelector('.repository').value
+                    };
+
+                    const citation = generateCitation(data, currentFormat);
+                    citations.push({
+                        type: sourceType,
+                        title: title,
+                        citation: citation
+                    });
+                }
+            });
+
+            if (citations.length > 0) {
+                displayCitations();
+                displayChart();
+                document.getElementById('resultsSection').classList.add('active');
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert('Please add at least one citation with required fields.');
+            }
+        });
+
+        function generateCitation(data, format) {
+            switch(format) {
+                case 'chicago':
+                    return generateChicagoCitation(data);
+                case 'mla':
+                    return generateMLACitation(data);
+                case 'apa':
+                    return generateAPACitation(data);
+                default:
+                    return generateChicagoCitation(data);
+            }
+        }
+
+        function generateChicagoCitation(data) {
+            let citation = '';
+            if (data.author) citation += data.author + '. ';
+            citation += '"' + data.title + '"';
+            if (data.name) citation += ' [' + data.name + ']';
+            if (data.date) citation += ', ' + data.date;
+            if (data.location) citation += ', ' + data.location;
+            citation += '; ';
+            if (data.repository) citation += data.repository + '; ';
+            citation = citation.replace(/; $/, '.');
+            return citation;
+        }
+
+        function generateMLACitation(data) {
+            let citation = '';
+            if (data.author) citation += data.author + '. ';
+            citation += '"' + data.title + '."';
+            if (data.name) citation += ' Subject: ' + data.name + '.';
+            if (data.repository) citation += ' ' + data.repository + '.';
+            if (data.location) citation += ' ' + data.location + '.';
+            if (data.date) citation += ' ' + data.date + '.';
+            return citation.replace(/\.\./g, '.');
+        }
+
+        function generateAPACitation(data) {
+            let citation = '';
+            if (data.author) citation += data.author + '. ';
+            if (data.date) {
+                const year = data.date.match(/\d{4}/);
+                citation += year ? '(' + year[0] + '). ' : '(n.d.). ';
+            } else {
+                citation += '(n.d.). ';
+            }
+            citation += data.title;
+            if (data.name) citation += ' [' + data.name + ']';
+            citation += '.';
+            if (data.repository) citation += ' ' + data.repository + '.';
+            if (data.location) citation += ' ' + data.location + '.';
+            return citation;
+        }
+
+        function displayCitations() {
+            const tbody = document.getElementById('citationTableBody');
+            tbody.innerHTML = citations.map(item => `
+                <tr>
+                    <td><span class="source-type-badge badge-${item.type}">${sourceTypeLabels[item.type]}</span></td>
+                    <td><strong>${item.title}</strong></td>
+                    <td class="citation-text">${item.citation}</td>
+                </tr>
+            `).join('');
+        }
+
+        function displayChart() {
+            const typeCounts = {};
+            citations.forEach(item => {
+                typeCounts[item.type] = (typeCounts[item.type] || 0) + 1;
+            });
+
+            const chartHTML = Object.entries(typeCounts)
+                .sort((a, b) => b[1] - a[1])
+                .map(([type, count]) => {
+                    const percentage = (count / citations.length * 100).toFixed(1);
+                    return `
+                        <div class="chart-bar-container">
+                            <div class="chart-label">
+                                <span>${sourceTypeLabels[type]}</span>
+                                <span>${count} (${percentage}%)</span>
+                            </div>
+                            <div class="chart-bar-bg">
+                                <div class="chart-bar-fill badge-${type}" style="width: 0%" data-width="${percentage}">
+                                    ${count}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            document.getElementById('chartContainer').innerHTML = chartHTML;
+
+            setTimeout(() => {
+                document.querySelectorAll('.chart-bar-fill').forEach(bar => {
+                    bar.style.width = bar.dataset.width + '%';
+                });
+            }, 100);
+        }
+
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            const text = citations.map(item => item.citation).join('\n\n');
+            navigator.clipboard.writeText(text).then(() => {
+                this.textContent = 'Copied!';
+                setTimeout(() => {
+                    this.textContent = 'Copy All to Clipboard';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        });
+
+        document.querySelectorAll('.citation-table th').forEach(header => {
+            header.addEventListener('click', function() {
+                const sortKey = this.dataset.sort;
+                citations.sort((a, b) => {
+                    if (a[sortKey] < b[sortKey]) return -1;
+                    if (a[sortKey] > b[sortKey]) return 1;
+                    return 0;
+                });
+                displayCitations();
+            });
+        });
+
+        addCitationEntry();
+    </script>
+</body>
+</html>
