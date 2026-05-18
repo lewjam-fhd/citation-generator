@@ -1,0 +1,27 @@
+[
+  {
+    "theme": "Census Records",
+    "frequency": 85,
+    "category": "Sources"
+  },
+  {
+    "theme": "Birth Certificates",
+    "frequency": 72,
+    "category": "Documentation"
+  },
+  {
+    "theme": "Family Tree Research",
+    "frequency": 94,
+    "category": "Research"
+  },
+  {
+    "theme": "Immigration Records",
+    "frequency": 61,
+    "category": "Sources"
+  },
+  {
+    "theme": "Obituary Analysis",
+    "frequency": 48,
+    "category": "Documentation"
+  }
+]
